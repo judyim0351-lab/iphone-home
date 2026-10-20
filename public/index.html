@@ -82,10 +82,49 @@ body{background:var(--stage);color:var(--ink);font-family:var(--ios);display:fle
 .sempty{color:rgba(255,255,255,.75);font:400 calc(var(--u)*27)/1.4 var(--ios)}
 /* full-screen mode on phones */
 body.full{background:#000;padding:0;display:block}
+body.full::before{content:"";position:fixed;inset:-40px;background:url(base-full.jpg) center/cover;filter:blur(28px) brightness(.55)}
 body.full .phone{position:fixed;max-width:none;filter:none;aspect-ratio:auto;background:url(base-full.jpg) no-repeat;background-size:89.5556% 95.0543%;background-position:50.0000% 50.5495%}
 body.full .screen{border-radius:0}
-body.full .frame-only,body.full .app .time{display:none}
+body.full.standalone .frame-only,body.full.standalone .app .time{display:none}
 body.full .homebar{padding-bottom:calc(var(--u)*70)}
+/* lock screen */
+.lock{position:absolute;inset:0;background:url(lock.jpg) center/100% 100% no-repeat;transition:transform .45s cubic-bezier(.22,.9,.24,1),opacity .45s;touch-action:none;cursor:grab}
+body.full.standalone .lock{background-image:url(lock-clean.jpg)}
+.lock.gone{transform:translateY(-100%);opacity:0;pointer-events:none}
+.lock .lk{position:absolute;cursor:pointer;border-radius:calc(var(--u)*44)}
+.lock .lk.round{border-radius:50%}
+.torch{position:absolute;border-radius:50%;background:#fff;display:grid;place-items:center;pointer-events:none;opacity:0;transform:scale(.85);transition:opacity .18s,transform .25s cubic-bezier(.3,1.5,.5,1)}
+.torch.on{opacity:1;transform:scale(1)}
+.torch svg{width:42%;height:42%}
+.relock{position:absolute;touch-action:none}
+/* passcode */
+.pin{position:absolute;inset:0;background:url(pin-bg.jpg) center/100% 100% no-repeat;color:#fff;font-family:var(--ios);opacity:0;pointer-events:none;transition:opacity .35s,transform .45s cubic-bezier(.22,.9,.24,1)}
+.pin::before{content:"";position:absolute;inset:0;background:rgba(20,18,22,.28)}
+.pin.on{opacity:1;pointer-events:auto}
+.pin.out{opacity:0;transform:scale(1.08);pointer-events:none}
+.pin > *{position:absolute}
+.pin .prompt{left:0;right:0;text-align:center;font:400 calc(var(--u)*38)/1.25 var(--ios);letter-spacing:-.01em}
+.pin .dots{left:0;right:0;display:flex;justify-content:center;gap:calc(var(--u)*50)}
+.pin .dots i{width:calc(var(--u)*26);height:calc(var(--u)*26);border-radius:50%;border:calc(var(--u)*2.6) solid #fff;box-sizing:border-box;transition:background .12s}
+.pin .dots i.f{background:#fff}
+.pin .dots.shake{animation:shake .42s}
+@keyframes shake{20%,60%{transform:translateX(calc(var(--u)*-26))}40%,80%{transform:translateX(calc(var(--u)*26))}}
+.key{width:calc(var(--u)*157);height:calc(var(--u)*157);margin:calc(var(--u)*-78.5) 0 0 calc(var(--u)*-78.5);border-radius:50%;border:0;padding:0;cursor:pointer;color:#fff;
+  background:radial-gradient(120% 120% at 30% 20%,rgba(255,255,255,.34),rgba(255,255,255,.12) 55%,rgba(255,255,255,.2));
+  box-shadow:inset 0 0 0 calc(var(--u)*1.5) rgba(255,255,255,.45),inset 0 calc(var(--u)*-8) calc(var(--u)*18) rgba(255,255,255,.12),0 calc(var(--u)*6) calc(var(--u)*20) rgba(0,0,0,.12);
+  -webkit-backdrop-filter:blur(6px) saturate(1.4);backdrop-filter:blur(6px) saturate(1.4);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:background .25s,transform .12s;-webkit-tap-highlight-color:transparent}
+.key b{font:300 calc(var(--u)*72)/1 var(--ios);display:block}
+.key small{font:600 calc(var(--u)*19)/1 var(--ios);letter-spacing:.22em;margin-top:calc(var(--u)*4);margin-right:-.22em}
+.key.zero b{margin-bottom:calc(var(--u)*8)}
+.key.down{background:rgba(255,255,255,.62);transition:none}
+.key:focus-visible,.pin .txt:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.pin .txt{background:none;border:0;color:#fff;font:400 calc(var(--u)*30)/1 var(--ios);cursor:pointer;padding:calc(var(--u)*14) calc(var(--u)*20);transform:translate(-50%,-50%)}
+.pisland{position:absolute;background:#000;border-radius:999px;display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;pointer-events:none;z-index:6;
+  opacity:0;transition:all .4s cubic-bezier(.3,1.25,.5,1)}
+.pisland.on{opacity:1}
+.pisland svg{height:56%;width:auto;flex:none}
+.pisland .face{transition:opacity .3s}
+@media (prefers-reduced-motion: reduce){.lock,.pin,.pisland{transition-duration:.01s}.pin .dots.shake{animation:none}}
 @media (prefers-reduced-motion: reduce){.app,.search{transition-duration:.01s}.jiggle .tile,.jiggle .badge,.eq i{animation:none}}
 </style>
 </head>
@@ -113,7 +152,8 @@ new ResizeObserver(resize).observe(phone);
 const fullMQ=matchMedia('(max-width: 600px)');
 function layout(){
   const full=fullMQ.matches;document.body.classList.toggle('full',full);
-  if(full){const vw=innerWidth,vh=innerHeight,u=Math.max(vw/SW,vh/SH);
+  document.body.classList.toggle('standalone',!!(navigator.standalone||matchMedia('(display-mode: standalone)').matches));
+  if(full){const vw=innerWidth,vh=innerHeight,u=Math.min(vw/SW,vh/SH);
     Object.assign(phone.style,{width:W*u+'px',height:H*u+'px',left:((vw-SW*u)/2-SX*u)+'px',top:((vh-SH*u)/2-SY*u)+'px'})}
   else Object.assign(phone.style,{width:'',height:'',left:'',top:''});
   resize()}
@@ -225,7 +265,75 @@ function openSearch(){if(currentApp||searchEl)return;
 }
 function closeSearch(now){const s=searchEl;if(!s)return;searchEl=null;if(now){s.remove();return}s.classList.remove('on');setTimeout(()=>s.remove(),260)}
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(currentApp)closeApp();else if(searchEl)closeSearch();else endEdit()}});
+/* ---------- lock screen ---------- */
+function placeS(el,x,y,w,h){Object.assign(el.style,{left:(x-SX)/SW*100+'%',top:(y-SY)/SH*100+'%',width:w/SW*100+'%',height:h/SH*100+'%'});return el}
+const lock=document.createElement('div');lock.className='lock';lock.setAttribute('aria-label','잠금 화면. 위로 쓸어올려 열기');screen.insertBefore(lock,done);
+const torch=placeS(mk('torch',lock),139,1578,116,116);
+torch.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 2h8v4l-2 4v11a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V10L8 6z" fill="#111"/><circle cx="12" cy="13" r="1.4" fill="#fff"/></svg>';
+const lockHits=[
+  {x:77,y:1036,w:744,h:130,act:()=>askPin(()=>openApp(icons.find(i=>i.id==='phone'),tiles.phone)),label:'엄마 부재중 전화'},
+  {x:77,y:1184,w:744,h:128,act:null,label:'알림'},
+  {x:77,y:1342,w:744,h:128,act:()=>askPin(()=>openApp(icons.find(i=>i.id==='kakao'),tiles.kakao)),label:'태형 선배 카카오톡 메시지'},
+  {x:139,y:1578,w:116,h:116,round:1,act:()=>torch.classList.toggle('on'),label:'손전등'},
+  {x:643,y:1578,w:116,h:116,round:1,act:()=>unlock(()=>openApp(icons.find(i=>i.id==='camera'),tiles.camera)),label:'카메라'}
+];
+lockHits.forEach(h=>{const el=placeS(mk('lk'+(h.round?' round':''),lock),h.x,h.y,h.w,h.h);el.setAttribute('aria-label',h.label);el.setAttribute('role','button');el.tabIndex=0;el._act=h.act;
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();(h.act||bounce)()}})});
+let locked=true;
+function bounce(){lock.animate([{transform:'translateY(0)'},{transform:'translateY(-5%)'},{transform:'translateY(0)'}],{duration:420,easing:'ease-out'})}
+function unlock(then){if(!locked)return;locked=false;torch.classList.remove('on');lock.style.transition='';lock.style.transform='';lock.style.opacity='';lock.classList.add('gone');lock.setAttribute('aria-hidden','true');relockZone.hidden=false;
+  if(then)setTimeout(then,380)}
+function relock(){if(locked)return;resetPin();if(currentApp)closeApp();closeSearch(true);endEdit();locked=true;relockZone.hidden=true;lock.removeAttribute('aria-hidden');lock.classList.remove('gone')}
+{let y0=null,t0=0,moved=false;
+ lock.addEventListener('pointerdown',e=>{if(e.button)return;y0=e.clientY;t0=performance.now();moved=false;lock.setPointerCapture(e.pointerId);lock.style.transition='none'});
+ lock.addEventListener('pointermove',e=>{if(y0==null)return;const dy=e.clientY-y0;if(Math.abs(dy)>8)moved=true;if(dy<0){lock.style.transform=`translateY(${dy}px)`;lock.style.opacity=Math.max(.3,1+dy/700)}});
+ lock.addEventListener('pointerup',e=>{if(y0==null)return;const dy=e.clientY-y0,dt=performance.now()-t0,hgt=lock.getBoundingClientRect().height;y0=null;lock.style.transition='';
+   if(dy<-hgt*.18||(dy<-40&&dt<250)){askPin();return}
+   lock.style.transform='';lock.style.opacity='';
+   if(!moved){const hit=document.elementsFromPoint(e.clientX,e.clientY).find(n=>n.classList&&n.classList.contains('lk'));if(hit&&hit._act)hit._act();else bounce()}});
+ lock.addEventListener('pointercancel',()=>{y0=null;lock.style.transition='';lock.style.transform='';lock.style.opacity=''});
+}
+/* ---------- passcode ---------- */
+const PASSCODE=null; // 예: '123456'으로 바꾸면 그 번호만 열려요. null이면 아무 6자리나 열려요.
+const pin=document.createElement('div');pin.className='pin';pin.setAttribute('aria-label','암호 입력');screen.insertBefore(pin,lock);
+const prompt=placeS(mk('prompt',pin),SX,SY+300,SW,60);prompt.style.width='';prompt.textContent='암호 입력';
+const dotsEl=placeS(mk('dots',pin),SX,SY+431,SW,26);dotsEl.style.width='';dotsEl.innerHTML='<i></i>'.repeat(6);
+const keyX=[194,403,611],keyY=[679,876,1072,1269],letters=['','ABC','DEF','GHI','JKL','MNO','PQRS','TUV','WXYZ'];
+function keyAt(d,x,y){const b=document.createElement('button');b.type='button';b.className='key'+(d===0?' zero':'');b.setAttribute('aria-label',String(d));
+  b.innerHTML=`<b>${d}</b>`+(d>1?`<small>${letters[d-1]}</small>`:(d===1?'<small>&nbsp;</small>':''));
+  b.style.left=x/SW*100+'%';b.style.top=y/SH*100+'%';pin.appendChild(b);
+  b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('down');press(d)});
+  const up=()=>b.classList.remove('down');b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);b.addEventListener('pointercancel',up);
+  b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();press(d)}})}
+[1,2,3,4,5,6,7,8,9].forEach((d,i)=>keyAt(d,keyX[i%3],keyY[Math.floor(i/3)]));keyAt(0,keyX[1],keyY[3]);
+function txtBtn(label,x,y){const b=document.createElement('button');b.type='button';b.className='txt';b.textContent=label;b.style.left=x/SW*100+'%';b.style.top=y/SH*100+'%';pin.appendChild(b);return b}
+txtBtn('긴급 상황',194,1607);
+const cancelBtn=txtBtn('취소',611,1607);
+cancelBtn.addEventListener('click',()=>{if(code.length){code=code.slice(0,-1);drawDots()}else cancelPin()});
+/* expanded Dynamic Island with lock + Face ID */
+const pis=place(mk('pisland'),326,73,248,74);
+pis.innerHTML='<svg class="lk" viewBox="0 0 20 24"><path class="shackle" d="M5 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" style="transition:transform .3s;transform-origin:15px 10px"/><rect x="2" y="10" width="16" height="13" rx="3" fill="#fff"/></svg><svg class="face" viewBox="0 0 24 24" fill="none" stroke="#5ee07a" stroke-width="2" stroke-linecap="round"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M8.5 9v1.5M15.5 9v1.5M12 9v4.5h-1M9 16.5c1.8 1.4 4.2 1.4 6 0"/></svg>';
+function islandOpen(on){if(on){place(pis,253,68,394,100);pis.style.padding='0 calc(var(--u)*34)';pis.classList.add('on')}else{place(pis,326,73,248,74);pis.style.padding='0';pis.classList.remove('on')}}
+let code='',pinOpen=false,pendingThen=null;
+function drawDots(){[...dotsEl.children].forEach((d,i)=>d.classList.toggle('f',i<code.length));cancelBtn.textContent=code.length?'삭제':'취소'}
+function askPin(then){if(!locked||pinOpen)return;pendingThen=then||null;pinOpen=true;code='';drawDots();torch.classList.remove('on');
+  lock.style.transition='';lock.style.transform='';lock.style.opacity='';lock.classList.add('gone');lock.setAttribute('aria-hidden','true');
+  pin.classList.remove('out');pin.classList.add('on');islandOpen(true)}
+function cancelPin(){if(!pinOpen)return;pinOpen=false;pendingThen=null;pin.classList.remove('on');islandOpen(false);lock.removeAttribute('aria-hidden');lock.classList.remove('gone')}
+function resetPin(){pinOpen=false;code='';drawDots();pin.classList.remove('on','out');islandOpen(false)}
+function press(d){if(!pinOpen||code.length>=6)return;code+=d;drawDots();
+  if(code.length===6)setTimeout(()=>{if(PASSCODE&&code!==PASSCODE){dotsEl.classList.remove('shake');void dotsEl.offsetWidth;dotsEl.classList.add('shake');if(navigator.vibrate)try{navigator.vibrate([30,40,30])}catch(_){}setTimeout(()=>{code='';drawDots()},420);return}
+    pis.querySelector('.shackle').style.transform='rotate(-35deg) translateY(-2px)';pis.querySelector('.face').style.opacity=0;
+    setTimeout(()=>{pin.classList.add('out');islandOpen(false);pinOpen=false;locked=false;relockZone.hidden=false;
+      setTimeout(()=>{pin.classList.remove('on','out');pis.querySelector('.shackle').style.transform='';pis.querySelector('.face').style.opacity='';code='';drawDots();const t=pendingThen;pendingThen=null;if(t)t()},420)},330)},140)}
+document.addEventListener('keydown',e=>{if(pinOpen&&/^[0-9]$/.test(e.key))press(+e.key);if(pinOpen&&e.key==='Backspace'&&code.length){code=code.slice(0,-1);drawDots()}});
+
+/* pull down from the top edge of the home screen to lock again */
+const relockZone=place(mk('relock'),47,46,806,110);relockZone.hidden=true;
+{let y0=null;relockZone.addEventListener('pointerdown',e=>{y0=e.clientY;relockZone.setPointerCapture(e.pointerId)});
+ relockZone.addEventListener('pointerup',e=>{if(y0!=null&&e.clientY-y0>50)relock();y0=null});}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pinOpen){cancelPin();return}if(e.key==='Escape'&&locked){askPin();return}if(e.key==='Escape'){if(currentApp)closeApp();else if(searchEl)closeSearch();else endEdit()}});
 </script>
 </body>
 </html>
