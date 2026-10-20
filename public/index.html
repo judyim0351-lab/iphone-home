@@ -82,6 +82,7 @@ body{background:var(--stage);color:var(--ink);font-family:var(--ios);display:fle
 .sempty{color:rgba(255,255,255,.75);font:400 calc(var(--u)*27)/1.4 var(--ios)}
 /* full-screen mode on phones */
 body.full{background:#000;padding:0;display:block}
+body.full::before{content:"";position:fixed;inset:-40px;background:url(base-full.jpg) center/cover;filter:blur(28px) brightness(.55)}
 body.full .phone{position:fixed;max-width:none;filter:none;aspect-ratio:auto;background:url(base-full.jpg) no-repeat;background-size:89.5556% 95.0543%;background-position:50.0000% 50.5495%}
 body.full .screen{border-radius:0}
 body.full .frame-only,body.full .app .time{display:none}
@@ -113,7 +114,7 @@ new ResizeObserver(resize).observe(phone);
 const fullMQ=matchMedia('(max-width: 600px)');
 function layout(){
   const full=fullMQ.matches;document.body.classList.toggle('full',full);
-  if(full){const vw=innerWidth,vh=innerHeight,u=Math.max(vw/SW,vh/SH);
+  if(full){const vw=innerWidth,vh=innerHeight,u=Math.min(vw/SW,vh/SH);
     Object.assign(phone.style,{width:W*u+'px',height:H*u+'px',left:((vw-SW*u)/2-SX*u)+'px',top:((vh-SH*u)/2-SY*u)+'px'})}
   else Object.assign(phone.style,{width:'',height:'',left:'',top:''});
   resize()}
