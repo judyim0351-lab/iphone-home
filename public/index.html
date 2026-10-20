@@ -3,13 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon.png">
 <title>내 아이폰 홈 화면</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
 html,body{margin:0}
-html{box-sizing:border-box}
-:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-/* Layout: one phone, centered on a quiet stage, with a single line of gesture hints underneath. */
+/* Layout: on a computer, one phone centered on a quiet stage; on a phone, the screen alone fills the display edge to edge. */
 :root{
   --stage:#ebeaef; --ink:#2b2931; --muted:#76727e; --chip:#ffffffcc; --chip-line:#d8d6de;
   --ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
@@ -77,15 +80,18 @@ body{background:var(--stage);color:var(--ink);font-family:var(--ios);display:fle
 .sitem{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*10);background:none;border:0;cursor:pointer;color:#fff;font:400 calc(var(--u)*22)/1.2 var(--ios);padding:0}
 .sitem span:first-child{width:calc(var(--u)*118);height:calc(var(--u)*118);border-radius:22.6%}
 .sempty{color:rgba(255,255,255,.75);font:400 calc(var(--u)*27)/1.4 var(--ios)}
-.hint{font:500 13px/1.4 "Noto Sans KR",var(--ios);color:var(--muted);text-align:center;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;max-width:440px}
-.hint b{font-weight:600;color:var(--ink);background:var(--chip);border:1px solid var(--chip-line);border-radius:99px;padding:3px 10px}
+/* full-screen mode on phones */
+body.full{background:#000;padding:0;display:block}
+body.full .phone{position:fixed;max-width:none;filter:none;aspect-ratio:auto;background:url(base-full.jpg) no-repeat;background-size:89.5556% 95.0543%;background-position:50.0000% 50.5495%}
+body.full .screen{border-radius:0}
+body.full .frame-only,body.full .app .time{display:none}
+body.full .homebar{padding-bottom:calc(var(--u)*70)}
 @media (prefers-reduced-motion: reduce){.app,.search{transition-duration:.01s}.jiggle .tile,.jiggle .badge,.eq i{animation:none}}
 </style>
 </head>
 <body>
 
 <div class="phone" id="phone" aria-label="아이폰 홈 화면 프로토타입"></div>
-<div class="hint"><b>탭</b> 앱 열기 <b>길게 누르기</b> 편집 모드 <b>하단 바 위로 밀기</b> 홈으로</div>
 
 <script>
 const W=900,H=1840, SX=47,SY=46,SW=806,SH=1749;
@@ -103,7 +109,17 @@ function place(el,x,y,w,h){Object.assign(el.style,{left:x/W*100+'%',top:y/H*100+
 function crop(el,x,y,w,h){el.classList.add('crop');el.style.backgroundSize=`${W/w*100}% ${H/h*100}%`;el.style.backgroundPosition=`${x/(W-w)*100}% ${y/(H-h)*100}%`;return el}
 function mk(cls,parent=phone){const d=document.createElement('div');if(cls)d.className=cls;parent.appendChild(d);return d}
 function resize(){phone.style.setProperty('--u',phone.getBoundingClientRect().width/W+'px')}
-new ResizeObserver(resize).observe(phone);resize();
+new ResizeObserver(resize).observe(phone);
+const fullMQ=matchMedia('(max-width: 600px)');
+function layout(){
+  const full=fullMQ.matches;document.body.classList.toggle('full',full);
+  if(full){const vw=innerWidth,vh=innerHeight,u=Math.max(vw/SW,vh/SH);
+    Object.assign(phone.style,{width:W*u+'px',height:H*u+'px',left:((vw-SW*u)/2-SX*u)+'px',top:((vh-SH*u)/2-SY*u)+'px'})}
+  else Object.assign(phone.style,{width:'',height:'',left:'',top:''});
+  resize()}
+addEventListener('resize',layout);fullMQ.addEventListener?.('change',layout);layout();
+/* the drawn status bar (time, signal, battery) shows only inside the phone frame */
+const statusBar=crop(place(mk('frame-only'),140,80,650,62),140,80,650,62);statusBar.style.pointerEvents='none';
 
 /* icon tiles */
 const tiles={};
@@ -142,7 +158,7 @@ phone.addEventListener('pointerdown',e=>{if(e.target===phone&&phone.classList.co
 
 /* screen layer (app + search live inside the rounded screen) */
 const screen=place(mk('screen'),SX,SY,SW,SH);
-const island=crop(place(mk(''),326,73,248,74),326,73,248,74);island.style.borderRadius='99px';island.style.zIndex=5;island.style.pointerEvents='none';
+const island=crop(place(mk('frame-only'),326,73,248,74),326,73,248,74);island.style.borderRadius='99px';island.style.zIndex=5;island.style.pointerEvents='none';
 const done=document.createElement('button');done.className='done';done.textContent='완료';done.hidden=true;screen.appendChild(done);done.onclick=endEdit;
 
 function bindPress(el,onTap,opt={}){
