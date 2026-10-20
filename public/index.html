@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내 아이폰 홈 화면</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+html,body{margin:0}
+html{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Layout: one phone, centered on a quiet stage, with a single line of gesture hints underneath. */
+:root{
+  --stage:#ebeaef; --ink:#2b2931; --muted:#76727e; --chip:#ffffffcc; --chip-line:#d8d6de;
+  --ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  --blue:#007aff;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--stage:#111014;--ink:#eceaf1;--muted:#8f8b98;--chip:#1e1d23cc;--chip-line:#2e2c34;color-scheme:dark}}
+:root[data-theme="dark"]{--stage:#111014;--ink:#eceaf1;--muted:#8f8b98;--chip:#1e1d23cc;--chip-line:#2e2c34;color-scheme:dark}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--stage);color:var(--ink);font-family:var(--ios);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;box-sizing:border-box;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.phone{position:relative;width:min(calc((100dvh - 96px) * 900 / 1840), calc(100vw - 32px), 440px);aspect-ratio:900/1840;max-width:100%;
+  background:url(base.png) center/100% 100% no-repeat;touch-action:manipulation;filter:drop-shadow(0 18px 40px rgba(0,0,0,.18))}
+.phone > *{position:absolute}
+.crop{background-image:url(home.png);background-repeat:no-repeat}
+.tile{border-radius:22.6%;cursor:pointer;transition:filter .12s ease;will-change:transform}
+.tile.pressed{filter:brightness(.68)}
+.badge{border-radius:999px;pointer-events:none;transition:opacity .25s, transform .25s}
+.badge.gone{opacity:0;transform:scale(.4)}
+.jiggle .tile,.jiggle .badge{animation:jig .28s ease-in-out infinite alternate}
+@keyframes jig{from{transform:rotate(-1.8deg)}to{transform:rotate(1.8deg)}}
+.hit{cursor:pointer;border-radius:12px}
+.hit:focus-visible,.tile:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+/* widgets */
+.pill{border-radius:999px;background:linear-gradient(180deg,#fb5e70,#f9465b);color:#fff;display:flex;align-items:center;justify-content:center;gap:calc(var(--u)*10);
+  font:600 calc(var(--u)*27)/1 var(--ios);pointer-events:none}
+.pill svg{width:calc(var(--u)*22);height:calc(var(--u)*24)}
+.check{border-radius:50%;background:var(--blue);display:grid;place-items:center;pointer-events:none;transform:scale(.3);opacity:0;transition:transform .22s cubic-bezier(.3,1.6,.5,1),opacity .15s}
+.check.on{transform:scale(1);opacity:1}
+.check svg{width:55%;height:55%}
+.fade{background:#fff;opacity:0;pointer-events:none;transition:opacity .2s}
+.fade.on{opacity:.62}
+.count{background:#fff;color:#000;font:700 calc(var(--u)*44)/1 var(--ios);display:flex;align-items:center;justify-content:flex-end;letter-spacing:-.01em;pointer-events:none;font-variant-numeric:tabular-nums}
+.eq{display:flex;align-items:flex-end;gap:calc(var(--u)*4);pointer-events:none;background:linear-gradient(180deg,#fb6c80,#fb677e)}
+.eq i{flex:1;background:#fff;border-radius:2px;height:40%;animation:eq .5s ease-in-out infinite alternate}
+.eq i:nth-child(2){animation-delay:-.2s}.eq i:nth-child(3){animation-delay:-.35s}.eq i:nth-child(4){animation-delay:-.1s}
+@keyframes eq{to{height:100%}}
+/* screen layer */
+.screen{overflow:hidden;pointer-events:none;border-radius:14.2% / 6.6%}
+.screen > *{pointer-events:auto}
+.app{position:absolute;inset:0;transform-origin:0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*26);
+  font-family:var(--ios);transition:transform .44s cubic-bezier(.22,.9,.24,1),border-radius .44s cubic-bezier(.22,.9,.24,1);overflow:hidden}
+.app .bigicon{width:calc(var(--u)*200);height:calc(var(--u)*200);border-radius:22.6%;box-shadow:0 calc(var(--u)*10) calc(var(--u)*30) rgba(0,0,0,.15)}
+.app h2{margin:0;font:700 calc(var(--u)*44)/1.2 var(--ios);letter-spacing:-.01em}
+.app p{margin:0;font:400 calc(var(--u)*25)/1.5 var(--ios);opacity:.6;text-align:center;max-width:62%;text-wrap:balance;word-break:keep-all}
+.app .inner{display:contents}
+.app .time{position:absolute;top:calc(var(--u)*44);left:calc(var(--u)*106);font:600 calc(var(--u)*33)/1 var(--ios)}
+.app .content{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*26);transition:opacity .25s}
+.homebar{position:absolute;bottom:0;left:0;right:0;height:calc(var(--u)*110);display:flex;align-items:flex-end;justify-content:center;padding-bottom:calc(var(--u)*24);box-sizing:border-box;cursor:grab;touch-action:none}
+.homebar span{width:calc(var(--u)*280);height:calc(var(--u)*11);border-radius:99px;background:currentColor;opacity:.85}
+.done{position:absolute;top:calc(var(--u)*140);right:calc(var(--u)*50);font:600 calc(var(--u)*28)/1 var(--ios);color:#fff;background:rgba(60,60,67,.45);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:0;border-radius:99px;padding:calc(var(--u)*16) calc(var(--u)*30);cursor:pointer}
+/* search */
+.search{position:absolute;inset:0;background:rgba(20,20,26,.35);-webkit-backdrop-filter:blur(26px) saturate(1.3);backdrop-filter:blur(26px) saturate(1.3);
+  display:flex;flex-direction:column;padding:calc(var(--u)*170) calc(var(--u)*50) 0;gap:calc(var(--u)*24);opacity:0;transition:opacity .25s;box-sizing:border-box}
+.search.on{opacity:1}
+.sfield{display:flex;align-items:center;gap:calc(var(--u)*14);background:rgba(255,255,255,.22);border-radius:calc(var(--u)*26);padding:0 calc(var(--u)*22);height:calc(var(--u)*80)}
+.sfield svg{width:calc(var(--u)*28);flex:none}
+.sfield input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:400 calc(var(--u)*32)/1 var(--ios)}
+.sfield input::placeholder{color:rgba(255,255,255,.65)}
+.sfield button{background:none;border:0;color:#fff;font:400 calc(var(--u)*30)/1 var(--ios);cursor:pointer;padding:0}
+.slabel{color:rgba(255,255,255,.75);font:600 calc(var(--u)*24)/1 var(--ios);margin-top:calc(var(--u)*10)}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(var(--u)*30) calc(var(--u)*20)}
+.sitem{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*10);background:none;border:0;cursor:pointer;color:#fff;font:400 calc(var(--u)*22)/1.2 var(--ios);padding:0}
+.sitem span:first-child{width:calc(var(--u)*118);height:calc(var(--u)*118);border-radius:22.6%}
+.sempty{color:rgba(255,255,255,.75);font:400 calc(var(--u)*27)/1.4 var(--ios)}
+.hint{font:500 13px/1.4 "Noto Sans KR",var(--ios);color:var(--muted);text-align:center;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;max-width:440px}
+.hint b{font-weight:600;color:var(--ink);background:var(--chip);border:1px solid var(--chip-line);border-radius:99px;padding:3px 10px}
+@media (prefers-reduced-motion: reduce){.app,.search{transition-duration:.01s}.jiggle .tile,.jiggle .badge,.eq i{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone" aria-label="아이폰 홈 화면 프로토타입"></div>
+<div class="hint"><b>탭</b> 앱 열기 <b>길게 누르기</b> 편집 모드 <b>하단 바 위로 밀기</b> 홈으로</div>
+
+<script>
+const W=900,H=1840, SX=47,SY=46,SW=806,SH=1749;
+const phone=document.getElementById('phone');
+const icons=[
+ ["facetime","FaceTime",110,634,"#1c1c1e","#fff"],["calendar","캘린더",296,634,"#fff","#000"],["photos","사진",482,634,"#fff","#000"],["camera","카메라",668,634,"#000","#fff"],
+ ["netflix","Netflix",112,832,"#000","#fff"],["dict","네이버 사전",298,832,"#fff","#000"],["everytime","에브리타임",483,832,"#fff","#000"],["cgv","CGV",668,832,"#fff","#000"],
+ ["notes","메모",108,1016,"#fffdf6","#000"],["maps","지도",294,1016,"#eef2ec","#000"],["instagram","Instagram",480,1016,"#fff","#000"],["naver","네이버",666,1016,"#fff","#000"],
+ ["cafe","네이버 카페",112,1214,"#fff","#000"],
+ ["phone","전화",120,1594,"#fff","#000"],["safari","Safari",298,1594,"#fff","#000"],["messages","메시지",475,1594,"#fff","#000"],["kakao","카카오톡",652,1594,"#fff","#000"]
+].map(([id,name,x,y,bg,fg])=>({id,name,x,y,w:128,h:128,bg,fg}));
+const extraApps={music:{id:"music",name:"음악",x:142,y:260,w:96,h:96,bg:"#fff",fg:"#000"},reminders:{id:"reminders",name:"미리 알림",x:510,y:260,w:0,h:0,bg:"#fff",fg:"#000"}};
+
+function place(el,x,y,w,h){Object.assign(el.style,{left:x/W*100+'%',top:y/H*100+'%',width:w/W*100+'%',height:h/H*100+'%'});return el}
+function crop(el,x,y,w,h){el.classList.add('crop');el.style.backgroundSize=`${W/w*100}% ${H/h*100}%`;el.style.backgroundPosition=`${x/(W-w)*100}% ${y/(H-h)*100}%`;return el}
+function mk(cls,parent=phone){const d=document.createElement('div');if(cls)d.className=cls;parent.appendChild(d);return d}
+function resize(){phone.style.setProperty('--u',phone.getBoundingClientRect().width/W+'px')}
+new ResizeObserver(resize).observe(phone);resize();
+
+/* icon tiles */
+const tiles={};
+icons.forEach(ic=>{const t=crop(place(mk('tile'),ic.x,ic.y,ic.w,ic.h),ic.x,ic.y,ic.w,ic.h);
+  t.tabIndex=0;t.setAttribute('role','button');t.setAttribute('aria-label',ic.name+' 열기');t.style.animationDelay=(-Math.random()*.28)+'s';tiles[ic.id]=t;bindPress(t,()=>openApp(ic,t))});
+const badge=crop(place(mk('badge'),721,1567,88,54),721,1567,88,54);badge.style.animationDelay=tiles.kakao.style.animationDelay;
+
+/* music widget */
+let playing=false;
+const musicHit=place(mk('hit'),108,228,316,312);musicHit.tabIndex=0;musicHit.setAttribute('aria-label','음악 열기');
+const pill=place(mk('pill'),142,454,136,54);pill.hidden=true;
+pill.innerHTML='<svg viewBox="0 0 22 24"><rect x="2" y="2" width="6" height="20" rx="1.5" fill="#fff"/><rect x="14" y="2" width="6" height="20" rx="1.5" fill="#fff"/></svg>Pause';
+const eq=place(mk('eq'),356,258,40,42);eq.hidden=true;eq.innerHTML='<i></i><i></i><i></i><i></i>';
+const playHit=place(mk('hit'),142,454,136,54);playHit.tabIndex=0;playHit.setAttribute('role','button');playHit.setAttribute('aria-label','재생');
+bindPress(playHit,()=>{playing=!playing;pill.hidden=!playing;eq.hidden=!playing;playHit.setAttribute('aria-label',playing?'일시정지':'재생')},{noDim:true});
+bindPress(musicHit,()=>openApp(extraApps.music,musicHit),{noDim:true,long:false});
+
+/* reminders widget */
+const remHit=place(mk('hit'),478,228,314,316);remHit.tabIndex=0;remHit.setAttribute('aria-label','미리 알림 열기');
+bindPress(remHit,()=>openApp(extraApps.reminders,remHit),{noDim:true,long:false});
+const count=place(mk('count'),690,254,72,56);count.hidden=true;let left=27;
+[347,416,486].forEach(cy=>{
+  const fade=place(mk('fade'),562,cy-24,210,48);
+  const chk=place(mk('check'),510,cy-21,42,42);chk.innerHTML='<svg viewBox="0 0 20 20"><path d="M4.5 10.5l3.6 3.6 7.4-8" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const h=place(mk('hit'),498,cy-32,280,64);h.tabIndex=0;h.setAttribute('role','checkbox');h.setAttribute('aria-checked','false');h.setAttribute('aria-label','할 일 완료');
+  bindPress(h,()=>{const on=!chk.classList.contains('on');chk.classList.toggle('on',on);fade.classList.toggle('on',on);h.setAttribute('aria-checked',on);
+    left+=on?-1:1;count.hidden=left===27;count.textContent=left},{noDim:true,long:false});
+});
+
+/* search pill */
+const searchHit=place(mk('hit'),374,1455,152,58);searchHit.tabIndex=0;searchHit.setAttribute('aria-label','검색');searchHit.style.borderRadius='99px';
+bindPress(searchHit,openSearch,{noDim:true,long:false});
+
+/* empty wallpaper ends edit mode */
+phone.addEventListener('pointerdown',e=>{if(e.target===phone&&phone.classList.contains('jiggle'))endEdit()});
+
+/* screen layer (app + search live inside the rounded screen) */
+const screen=place(mk('screen'),SX,SY,SW,SH);
+const island=crop(place(mk(''),326,73,248,74),326,73,248,74);island.style.borderRadius='99px';island.style.zIndex=5;island.style.pointerEvents='none';
+const done=document.createElement('button');done.className='done';done.textContent='완료';done.hidden=true;screen.appendChild(done);done.onclick=endEdit;
+
+function bindPress(el,onTap,opt={}){
+  let timer=null,sx=0,sy=0,armed=false;
+  el.addEventListener('pointerdown',e=>{if(e.button)return;armed=true;sx=e.clientX;sy=e.clientY;if(!opt.noDim)el.classList.add('pressed');
+    if(opt.long!==false)timer=setTimeout(()=>{armed=false;el.classList.remove('pressed');startEdit()},520)});
+  el.addEventListener('pointermove',e=>{if(armed&&Math.hypot(e.clientX-sx,e.clientY-sy)>12){armed=false;clearTimeout(timer);el.classList.remove('pressed')}});
+  const end=()=>{clearTimeout(timer);el.classList.remove('pressed')};
+  el.addEventListener('pointerleave',()=>{armed=false;end()});
+  el.addEventListener('pointercancel',()=>{armed=false;end()});
+  el.addEventListener('pointerup',()=>{end();if(armed){armed=false;if(phone.classList.contains('jiggle'))return;onTap()}});
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onTap()}});
+  el.addEventListener('contextmenu',e=>e.preventDefault());
+}
+function startEdit(){if(currentApp)return;phone.classList.add('jiggle');done.hidden=false;if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}}
+function endEdit(){phone.classList.remove('jiggle');done.hidden=true}
+
+/* open / close an app with the iOS zoom */
+let currentApp=null;
+function rectInScreen(el){const r=el.getBoundingClientRect(),s=screen.getBoundingClientRect();return{x:r.left-s.left,y:r.top-s.top,w:r.width,h:r.height,sw:s.width,sh:s.height}}
+function iconTransform(r){const w=r.w||r.sw*.15,h=r.h||w;return`translate(${r.x}px,${r.y}px) scale(${w/r.sw},${h/r.sh})`}
+function openApp(ic,fromEl){
+  if(currentApp)return;closeSearch(true);
+  const app=document.createElement('div');app.className='app';app.style.background=ic.bg;app.style.color=ic.fg;
+  const iconHtml=ic.w?`<span class="bigicon crop"></span>`:'';
+  app.innerHTML=`<div class="time">9:41</div><div class="content">${iconHtml}<h2></h2><p>이 앱의 다음 화면을 보내주시면 여기에 연결할게요</p></div><div class="homebar" aria-label="홈으로" role="button" tabindex="0"><span></span></div>`;
+  app.querySelector('h2').textContent=ic.name;
+  if(ic.w){const b=app.querySelector('.bigicon');b.style.backgroundSize=`${W/ic.w*100}% ${H/ic.h*100}%`;b.style.backgroundPosition=`${ic.x/(W-ic.w)*100}% ${ic.y/(H-ic.h)*100}%`}
+  const content=app.querySelector('.content');content.style.opacity=0;
+  screen.insertBefore(app,done);
+  const r=rectInScreen(fromEl);app._r=r;app._el=fromEl;
+  app.style.transition='none';app.style.transform=iconTransform(r);app.style.borderRadius='22.6%';
+  app.getBoundingClientRect();app.style.transition='';
+  requestAnimationFrame(()=>{app.style.transform='none';app.style.borderRadius='0';content.style.opacity=1});
+  currentApp=app;
+  if(ic.id==='kakao')setTimeout(()=>badge.classList.add('gone'),300);
+  const bar=app.querySelector('.homebar');let y0=null;
+  bar.addEventListener('pointerdown',e=>{y0=e.clientY;bar.setPointerCapture(e.pointerId);app.style.transition='none'});
+  bar.addEventListener('pointermove',e=>{if(y0==null)return;const dy=Math.min(0,e.clientY-y0),k=Math.max(.6,1+dy/600);app.style.transform=`translate(${(1-k)*r.sw/2}px,${(1-k)*r.sh/2+dy*.4}px) scale(${k})`;app.style.borderRadius=(1-k)*200+'px'});
+  bar.addEventListener('pointerup',e=>{const dy=e.clientY-y0;y0=null;app.style.transition='';if(dy<-50||Math.abs(dy)<6)closeApp();else{app.style.transform='none';app.style.borderRadius='0'}});
+  bar.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')closeApp()});
+}
+function closeApp(){const app=currentApp;if(!app)return;currentApp=null;
+  app.querySelector('.content').style.opacity=0;app.style.transform=iconTransform(rectInScreen(app._el));app.style.borderRadius='22.6%';
+  setTimeout(()=>{app.style.opacity=0;app.style.transition+=' ,opacity .12s'},330);setTimeout(()=>app.remove(),470)}
+
+/* search */
+let searchEl=null;
+function openSearch(){if(currentApp||searchEl)return;
+  const s=document.createElement('div');s.className='search';
+  s.innerHTML=`<div class="sfield"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="#fff" stroke-width="2.4"/><path d="M15.5 15.5l5 5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg><input id="q" type="search" placeholder="검색" aria-label="앱 검색" autocomplete="off"><button type="button">취소</button></div><div class="slabel">Siri 제안</div><div class="sgrid"></div>`;
+  screen.insertBefore(s,done);searchEl=s;
+  const grid=s.querySelector('.sgrid'),q=s.querySelector('input');
+  const render=()=>{const t=q.value.trim().toLowerCase();const list=icons.filter(ic=>!t||ic.name.toLowerCase().includes(t)||ic.id.includes(t)).slice(0,t?12:8);
+    grid.innerHTML='';s.querySelector('.slabel').textContent=t?'앱':'Siri 제안';
+    if(!list.length){grid.innerHTML='<div class="sempty" style="grid-column:1/-1">“'+q.value.replace(/[<&]/g,'')+'”와 일치하는 앱이 없어요</div>';return}
+    list.forEach(ic=>{const b=document.createElement('button');b.className='sitem';b.type='button';b.innerHTML='<span class="crop"></span><span></span>';
+      const ico=b.firstChild;ico.style.backgroundSize=`${W/ic.w*100}% ${H/ic.h*100}%`;ico.style.backgroundPosition=`${ic.x/(W-ic.w)*100}% ${ic.y/(H-ic.h)*100}%`;
+      b.lastChild.textContent=ic.name;b.onclick=()=>{closeSearch(true);openApp(ic,tiles[ic.id])};grid.appendChild(b)})};
+  q.addEventListener('input',render);render();
+  s.querySelector('.sfield button').onclick=()=>closeSearch();
+  s.addEventListener('pointerdown',e=>{if(e.target===s||e.target===grid)closeSearch()});
+  requestAnimationFrame(()=>{s.classList.add('on');try{q.focus({preventScroll:true})}catch(_){}});
+}
+function closeSearch(now){const s=searchEl;if(!s)return;searchEl=null;if(now){s.remove();return}s.classList.remove('on');setTimeout(()=>s.remove(),260)}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(currentApp)closeApp();else if(searchEl)closeSearch();else endEdit()}});
+</script>
+</body>
+</html>
